@@ -1,0 +1,86 @@
+menu "A2DP Example Configuration"
+
+    choice EXAMPLE_A2DP_SINK_OUTPUT
+        prompt "A2DP Sink Output"
+        default EXAMPLE_A2DP_SINK_OUTPUT_EXTERNAL_I2S
+        help
+            Select to use Internal DAC or external I2S driver
+
+        config EXAMPLE_A2DP_SINK_OUTPUT_INTERNAL_DAC
+            bool "Internal DAC"
+            help
+                Select this to use Internal DAC sink output
+
+        config EXAMPLE_A2DP_SINK_OUTPUT_EXTERNAL_I2S
+            bool "External I2S Codec"
+            help
+                Select this to use External I2S sink output
+
+    endchoice
+
+    config EXAMPLE_I2S_LRCK_PIN
+        int "I2S LRCK (WS) GPIO"
+        default 22
+        depends on EXAMPLE_A2DP_SINK_OUTPUT_EXTERNAL_I2S
+        help
+            GPIO number to use for I2S LRCK(WS) Driver.
+
+    config EXAMPLE_I2S_BCK_PIN
+        int "I2S BCK GPIO"
+        default 26
+        depends on EXAMPLE_A2DP_SINK_OUTPUT_EXTERNAL_I2S
+        help
+            GPIO number to use for I2S BCK Driver.
+
+    config EXAMPLE_I2S_DATA_PIN
+        int "I2S DATA GPIO"
+        default 25
+        depends on EXAMPLE_A2DP_SINK_OUTPUT_EXTERNAL_I2S
+        help
+            GPIO number to use for I2S Data Driver.
+
+endmenu
+
+menu "esp32-i2c-lcd1602-example Configuration"
+
+config I2C_MASTER_SCL
+    int "I2C Master SCL GPIO number"
+    range 0 34
+    default 19
+    help
+        GPIO number (IOxx) for I2C SCL.
+
+        Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used.
+
+        GPIOs 35-39 are input-only so cannot be used to drive the One Wire Bus.
+
+config I2C_MASTER_SDA
+    int "I2C Master SDA GPIO number"
+    range 0 34
+    default 18
+    help
+        GPIO number (IOxx) for I2C SDA.
+
+        Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used.
+
+        GPIOs 35-39 are input-only so cannot be used to drive the One Wire Bus.
+
+config LCD1602_I2C_ADDRESS
+    hex "I2C Address for LCD1602 device"
+    default 0x27
+    help
+        I2C address for HD44780-compatible LCD1602 device.
+
+config LCD1602_ROW_COUNT
+    hex "Number of rows"
+    default 4
+    help
+        Row count for HD44780-compatible LCD1602 device.
+
+config LCD1602_COL_COUNT
+    hex "Number of columns"
+    default 20
+    help
+        Column count for HD44780-compatible LCD1602 device.
+
+endmenu
