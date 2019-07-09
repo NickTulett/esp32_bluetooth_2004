@@ -19,6 +19,8 @@ For the I2S codec, pick whatever chip or board works for you; this code was writ
 
 If the internal DAC is selected, analog audio will be available on GPIO25 and GPIO26. The output resolution on these pins will always be limited to 8 bit because of the internal structure of the DACs.
 
+The DAC can be connected to 3.3V or 5V but the LCD must be powered by 5V.
+
 ### Configure the project
 
 ```
