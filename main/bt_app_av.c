@@ -11,6 +11,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "esp_log.h"
 
 #include "bt_app_core.h"
@@ -254,29 +255,16 @@ void bt_av_notify_evt_handler(uint8_t event_id, esp_avrc_rn_param_t *event_param
         break;
     case ESP_AVRC_RN_PLAY_POS_CHANGED:
         ESP_LOGI(BT_AV_TAG, "Play position changed: %d-ms", event_parameter->play_pos);
+        
         //Play position changed: 17087-ms
-        // uint32_t play_secs = event_parameter->play_pos / 1000;
-        // uint32_t play_mins = play_secs / 60;
-        // play_secs = play_secs - (play_mins * 60);
-        // char play_time[17];
-        // // if (play_mins < 100) 
-        // // {
-        // //     play_time = "0";
-        // // }
-        // // if (play_mins < 10) 
-        // // {
-        // //     play_time = "00";
-        // // }
-        // // sprintf(play_time, "%u:%u", play_mins, play_secs);
-        // strftime(play_time, 17, "%M:%S", event_parameter->play_pos);
-        // // play_time = play_time + ":";
-        // // if (play_secs < 10) 
-        // // {
-        // //     play_time = play_time + "0";
-        // // }
-        // // play_time = play_time + (char*)play_secs + ":";
-        // i2c_lcd1602_move_cursor(lcd_info, 2, 3);
-        // i2c_lcd1602_write_string(lcd_info, play_time);    
+        uint32_t play_secs = event_parameter->play_pos / 1000;
+        uint32_t play_mins = play_secs / 60;
+        play_secs = play_secs - (play_mins * 60);
+        char play_time[17];
+        sprintf(play_time, "%u:%02u", play_mins, play_secs);
+        ESP_LOGI(BT_AV_TAG, "Play position: %s", play_time);
+        i2c_lcd1602_move_cursor(lcd_info, 2, 3);
+        i2c_lcd1602_write_string(lcd_info, play_time);
 
         bt_av_play_pos_changed();
         break;
