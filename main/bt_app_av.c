@@ -263,7 +263,9 @@ void bt_av_notify_evt_handler(uint8_t event_id, esp_avrc_rn_param_t *event_param
         sprintf(play_time, "%03u:%02u", play_mins, play_secs);
         ESP_LOGI(BT_AV_TAG, "Play position: %s", play_time);
         i2c_lcd1602_move_cursor(lcd_info, 14, 3);
-        i2c_lcd1602_write_string(lcd_info, play_time);
+        if (strcmp(play_time, "71582:47") != 0) {
+            i2c_lcd1602_write_string(lcd_info, play_time);
+        }
 
         bt_av_play_pos_changed();
         break;
