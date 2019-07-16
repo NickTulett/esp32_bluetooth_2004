@@ -21,6 +21,9 @@ If the internal DAC is selected, analog audio will be available on GPIO25 and GP
 
 The DAC can be connected to 3.3V or 5V but the LCD must be powered by 5V.
 
+Example with PCM5120A stereo DAC:
+![PCM5102A example](https://github.com/NickTulett/esp32_bluetooth_2004/blob/master/bluetooth2004.jpg)
+
 ### Configure the project
 
 ```
