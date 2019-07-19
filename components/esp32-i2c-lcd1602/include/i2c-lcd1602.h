@@ -68,6 +68,8 @@ typedef struct
 #define I2C_LCD1602_CHARACTER_INFINITY     0b11110011   ///< Infinity symbol
 #define I2C_LCD1602_CHARACTER_DEGREE       0b11011111   ///< Degree symbol
 #define I2C_LCD1602_CHARACTER_ARROW_RIGHT  0b01111110   ///< Arrow pointing right symbol
+#define I2C_LCD1602_CHARACTER_GT           0b00111110   ///< Playish symbol
+#define I2C_LCD1602_CHARACTER_EQUAL        0b00111101   ///< Equals symbol
 #define I2C_LCD1602_CHARACTER_ARROW_LEFT   0b01111111   ///< Arrow pointing left symbol
 #define I2C_LCD1602_CHARACTER_SQUARE       0b11011011   ///< Square outline symbol
 #define I2C_LCD1602_CHARACTER_DOT          0b10100101   ///< Centred dot symbol

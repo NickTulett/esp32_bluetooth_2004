@@ -52,6 +52,7 @@ static _lock_t s_volume_lock;
 static xTaskHandle s_vcs_task_hdl = NULL;
 static uint8_t s_volume = 0;
 static bool s_volume_notify;
+static uint32_t track_length = 0;
 
 static i2c_lcd1602_info_t * lcd_info;
 
@@ -139,10 +140,6 @@ void bt_app_rc_tg_cb(esp_avrc_tg_cb_event_t event, esp_avrc_tg_cb_param_t *param
     }
 }
 
-void update_play_status()  
-{
-
-}
 static void bt_av_hdl_a2d_evt(uint16_t event, void *p_param)
 {
     ESP_LOGD(BT_AV_TAG, "%s evt %d", __func__, event);
@@ -164,18 +161,14 @@ static void bt_av_hdl_a2d_evt(uint16_t event, void *p_param)
         a2d = (esp_a2d_cb_param_t *)(p_param);
         ESP_LOGI(BT_AV_TAG, "A2DP audio state: %s", s_a2d_audio_state_str[a2d->audio_stat.state]);
         s_audio_state = a2d->audio_stat.state;
-        i2c_lcd1602_move_cursor(lcd_info, 0, 3);
-        i2c_lcd1602_write_string(lcd_info, "                    ");        
-        i2c_lcd1602_move_cursor(lcd_info, 0, 3);
+        i2c_lcd1602_move_cursor(lcd_info, 13, 3);
         if (strcmp(s_a2d_audio_state_str[s_audio_state], "Suspended") == 0) 
         {
-            i2c_lcd1602_write_char(lcd_info, I2C_LCD1602_CHARACTER_SQUARE);
-            // i2c_lcd1602_write_string(lcd_info, "Paused ");    
+            i2c_lcd1602_write_char(lcd_info, I2C_LCD1602_CHARACTER_EQUAL);
         }
         if (strcmp(s_a2d_audio_state_str[s_audio_state], "Started") == 0) 
         {
-            i2c_lcd1602_write_char(lcd_info, I2C_LCD1602_CHARACTER_ARROW_RIGHT);
-            // i2c_lcd1602_write_string(lcd_info, "Playing");    
+            i2c_lcd1602_write_char(lcd_info, I2C_LCD1602_CHARACTER_GT);
         }
         if (ESP_A2D_AUDIO_STATE_STARTED == a2d->audio_stat.state) {
             s_pkt_cnt = 0;
@@ -216,7 +209,7 @@ static void bt_av_hdl_a2d_evt(uint16_t event, void *p_param)
 static void bt_av_new_track(void)
 {
     // request metadata
-    uint8_t attr_mask = ESP_AVRC_MD_ATTR_TITLE | ESP_AVRC_MD_ATTR_ARTIST | ESP_AVRC_MD_ATTR_ALBUM | ESP_AVRC_MD_ATTR_GENRE;
+    uint8_t attr_mask = ESP_AVRC_MD_ATTR_TITLE | ESP_AVRC_MD_ATTR_ARTIST | ESP_AVRC_MD_ATTR_ALBUM | ESP_AVRC_MD_ATTR_GENRE | ESP_AVRC_MD_ATTR_PLAYING_TIME;
     esp_avrc_ct_send_metadata_cmd(APP_RC_CT_TL_GET_META_DATA, attr_mask);
 
     // register notification if peer support the event_id
@@ -238,7 +231,7 @@ static void bt_av_play_pos_changed(void)
 {
     if (esp_avrc_rn_evt_bit_mask_operation(ESP_AVRC_BIT_MASK_OP_TEST, &s_avrc_peer_rn_cap,
                                            ESP_AVRC_RN_PLAY_POS_CHANGED)) {
-        esp_avrc_ct_send_register_notification_cmd(APP_RC_CT_TL_RN_PLAY_POS_CHANGE, ESP_AVRC_RN_PLAY_POS_CHANGED, 10);
+        esp_avrc_ct_send_register_notification_cmd(APP_RC_CT_TL_RN_PLAY_POS_CHANGE, ESP_AVRC_RN_PLAY_POS_CHANGED, 1);
     }
 }
 
@@ -261,10 +254,31 @@ void bt_av_notify_evt_handler(uint8_t event_id, esp_avrc_rn_param_t *event_param
         play_secs = play_secs - (play_mins * 60);
         char play_time[17];
         sprintf(play_time, "%03u:%02u", play_mins, play_secs);
-        ESP_LOGI(BT_AV_TAG, "Play position: %s", play_time);
+        // ESP_LOGI(BT_AV_TAG, "Play position: %s", play_time);
         i2c_lcd1602_move_cursor(lcd_info, 14, 3);
-        if (strcmp(play_time, "71582:47") != 0) {
+        if (play_mins < 10000) {
             i2c_lcd1602_write_string(lcd_info, play_time);
+            if (track_length > 0) {
+                uint32_t track_progress = 130 * event_parameter->play_pos / track_length;
+                uint32_t track_decade = track_progress / 10;
+                // ESP_LOGI(BT_AV_TAG, "Track progress %d of %d", track_progress, track_length);
+                int i;
+                for (i = 0; i < track_decade; i++) {
+                    i2c_lcd1602_move_cursor(lcd_info, i, 3);
+                    i2c_lcd1602_write_char(lcd_info, I2C_LCD1602_CHARACTER_BLOCK);
+                }
+                if (i < 12) {
+                    for (int c = i+1; c < 13; c++) {
+                        i2c_lcd1602_move_cursor(lcd_info, c, 3);
+                        i2c_lcd1602_write_char(lcd_info, (char)32);
+                    }
+                }
+                if (track_progress > (track_decade * 10)) {
+                    i2c_lcd1602_move_cursor(lcd_info, track_decade, 3);
+                    i2c_lcd1602_write_char(lcd_info, I2C_LCD1602_CHARACTER_SQUARE);
+                }
+            }
+
         }
 
         bt_av_play_pos_changed();
@@ -308,7 +322,7 @@ static void bt_av_hdl_avrc_ct_evt(uint16_t event, void *p_param)
                 i2c_lcd1602_write_string(lcd_info, "                    ");
                 i2c_lcd1602_move_cursor(lcd_info, 0, 2);
                 i2c_lcd1602_write_string(lcd_info, "                    ");
-            } 
+            }
             if (row == 4) 
             {
                 row = 3;
@@ -319,6 +333,12 @@ static void bt_av_hdl_avrc_ct_evt(uint16_t event, void *p_param)
             char buffer[len + 1];        
             slice_str(str, buffer, 0, 19);
             i2c_lcd1602_write_string(lcd_info, buffer);
+        }
+        if (row == 0x40) {
+            track_length = strtol((const char*)rc->meta_rsp.attr_text, NULL, 10);
+            ESP_LOGI(BT_RC_CT_TAG, "Track Length:%d", track_length); 
+            i2c_lcd1602_move_cursor(lcd_info, 0, 3);
+            i2c_lcd1602_write_string(lcd_info, "             ");
         }
         free(rc->meta_rsp.attr_text);
         break;

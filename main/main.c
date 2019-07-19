@@ -243,7 +243,15 @@ static void bt_av_hdl_stack_evt(uint16_t event, void *p_param)
         esp_avrc_ct_register_callback(bt_app_rc_ct_cb);
         /* initialize AVRCP target */
         assert (esp_avrc_tg_init() == ESP_OK);
-        esp_avrc_tg_register_callback(bt_app_rc_tg_cb);
+        // esp_avrc_tg_register_callback(bt_app_rc_tg_cb);
+        esp_err_t err = esp_avrc_tg_register_callback(bt_app_rc_tg_cb);
+        if (err != ESP_OK) {
+            ESP_LOGE(BT_AV_TAG, "%s register tg callback failed: %s\n", __func__, esp_err_to_name(err));
+            return;
+        } else {
+            ESP_LOGI(BT_AV_TAG, "registered tg callback");
+        }
+
 
         esp_avrc_rn_evt_cap_mask_t evt_set = {0};
         esp_avrc_rn_evt_bit_mask_operation(ESP_AVRC_BIT_MASK_OP_SET, &evt_set, ESP_AVRC_RN_VOLUME_CHANGE);
